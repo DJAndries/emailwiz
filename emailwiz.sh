@@ -34,13 +34,19 @@
 # `mail.` before it).
 
 echo "Installing programs..."
-apt install postfix dovecot-imapd dovecot-sieve opendkim spamassassin spamc
-# Check if OpenDKIM is installed and install it if not.
-which opendkim-genkey >/dev/null 2>&1 || apt install opendkim-tools
-domain="$(cat /etc/mailname)"
-subdom=${MAIL_SUBDOM:-mail}
+
+domain="$(dnsdomainname)"
+subdom=$(hostname)
 maildomain="$subdom.$domain"
 certdir="/etc/letsencrypt/live/$maildomain"
+
+echo "postfix postfix/mailname string $maildomain" | debconf-set-selections
+echo "postfix postfix/main_mailer_type string 'Internet Site'" | debconf-set-selections
+
+
+apt --yes install postfix dovecot-imapd dovecot-sieve opendkim spamassassin spamc
+# Check if OpenDKIM is installed and install it if not.
+which opendkim-genkey >/dev/null 2>&1 || apt install opendkim-tools
 
 [ ! -d "$certdir" ] && echo "Note! You must first have a HTTPS/SSL Certificate for $maildomain.
 
